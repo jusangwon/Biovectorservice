@@ -20,12 +20,13 @@
 
 ### 사전 요구사항
 - **Java SE (JDK 17 이상 권장)**: [Eclipse Adoptium](https://adoptium.net/) 에서 설치
+- **gemini api key 생성(구글계정 필요)**: [Google AI studio](https://aistudio.google.com/api-keys). 에서 생성
 
 ### 실행 방법
 1. 저장소를 클론(또는 다운로드)합니다.
 2. `apikey/key.example.txt`를 참고하여 `apikey/` 폴더 안에 `key.txt` 파일을 생성하고 본인의 Google Gemini API 키를 저장합니다.
 3. `run.bat` 파일을 더블 클릭하여 실행합니다.
-4. 브라우저에서 `http://localhost:8090/`으로 자동 접속됩니다.
+4. 브라우저에서 `http://localhost:8090/`으로 자동 접속됩니다.(혹은 `index.html`을 브라우저로 실행합니다.)
 
 ---
 ### 추후 개선할것들(26.10.6)
@@ -34,6 +35,11 @@
 3. 작업기록 클릭시 이전 내역 불러오기
 4. 경로(path)클릭시 폴더 열기 or path 복사하기 
 
+---
+### 사용시 주의사항
+1. 이 프로그램은 google gemini api를 사용하는 서비스 임으로, 사용전에 api키 제작이 필수적입니다.
+2. gemini플랜별 제작이 가능한 SVG갯수에 일일제한이 있을 수 있습니다.
+   
 ---
 
 ## 📁 프로젝트 구조
