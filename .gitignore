@@ -1,0 +1,21 @@
+# Java 컴파일 바이너리
+*.class
+
+# API 키 및 민감 보안 정보 (GitHub 유출 방지 - 완벽 차단)
+apikey/*
+!apikey/key.example.txt
+*.env
+*.key
+*api_key*
+
+# 생성된 결과물 폴더 (개인 작업 파일)
+output/*
+!output/.gitkeep
+
+# IDE 및 OS 임시 파일
+.vscode/
+.idea/
+*.iml
+*.log
+Thumbs.db
+.DS_Store

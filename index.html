@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BioVector Studio — 생명과학 AI 벡터 변환기</title>
+  <meta name="description" content="생화학·생명과학 연구실 전용 AI 기반 손그림 → 순수 XML SVG 벡터 변환 서비스. 개체별 분해 및 날짜별 자동 저장." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230c0c0c'/><text x='16' y='22' text-anchor='middle' font-size='16'>🔬</text></svg>" />
+  <link rel="stylesheet" href="css/bio-style.css" />
+</head>
+<body>
+
+<!-- ── 헤더 ──────────────────────────────────────────────── -->
+<header class="app-header">
+  <div class="header-brand">
+    <div class="header-logo">🔬</div>
+    <div>
+      <div class="header-title">BioVector Studio</div>
+      <div class="header-subtitle">생명과학 연구실 · AI SVG 변환기</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="api-status" id="apiStatus">
+      <span class="api-status-dot"></span>API 연결됨
+    </div>
+  </div>
+</header>
+
+<!-- ── 2단 스튜디오 레이아웃 ───────────────────────────────── -->
+<main class="studio-layout">
+
+  <!-- ══ 좌측 입력 패널 ══ -->
+  <aside class="input-panel">
+
+    <!-- 1. 이미지 업로드 -->
+    <section class="panel-section">
+      <div class="section-label">① 이미지 업로드</div>
+
+      <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="이미지 업로드">
+        <div class="dropzone-icon">🖼</div>
+        <div class="dropzone-text"><strong>드래그 앤 드롭</strong> 또는 클릭</div>
+        <div class="dropzone-hint">손그림 · 화이트보드 · 현미경 사진 · 모식도</div>
+        <div class="dropzone-hint">JPG / PNG / WEBP · 최대 20MB</div>
+        <input type="file" id="fileInput" class="dropzone-input" accept="image/*" />
+      </div>
+
+      <div class="preview-wrap" id="previewWrap" style="margin-top:8px;">
+        <img id="previewImg" class="preview-img" alt="미리보기" />
+        <button class="preview-close" id="previewClose" aria-label="이미지 삭제">✕</button>
+      </div>
+
+      <label class="enhance-toggle" style="margin-top:8px;">
+        <label class="toggle-switch">
+          <input type="checkbox" id="enhanceToggle" checked />
+          <span class="toggle-slider"></span>
+        </label>
+        스케치 선명도 자동 보정
+      </label>
+    </section>
+
+    <!-- 2. 키워드 입력 -->
+    <section class="panel-section">
+      <div class="section-label">② 연구 키워드 / 설명</div>
+      <textarea
+        class="keyword-input"
+        id="keywordInput"
+        placeholder="예: CRISPR-Cas9, gRNA, PAM 서열, 이중나선 DNA 절단&#10;예: 플라스미드 형질전환, 암피실린 내성 유전자&#10;예: 미토콘드리아, ATP 합성효소, 전자전달계"
+        maxlength="500"
+        rows="4"
+        spellcheck="false"
+      ></textarea>
+      <div class="char-count" id="charCount">0 / 500</div>
+    </section>
+
+    <!-- 3. 스타일 설정 -->
+    <section class="panel-section">
+      <div class="section-label">③ 벡터 스타일</div>
+
+      <div class="style-grid" style="margin-bottom:8px;">
+        <div>
+          <div class="field-label">저널 스타일</div>
+          <select class="style-select" id="journalSelect">
+            <option value="Nature/Science">Nature / Science</option>
+            <option value="Cell">Cell</option>
+            <option value="BioRender">BioRender</option>
+            <option value="Flat Minimal">플랫 미니멀</option>
+            <option value="3D Shaded">3D 입체</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label">색상 톤</div>
+          <select class="style-select" id="colorSelect">
+            <option value="파스텔 바이오">바이오 파스텔</option>
+            <option value="Nature">Nature</option>
+            <option value="Cell">Cell</option>
+            <option value="BioRender">BioRender</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-label" style="margin-bottom:4px;">개체 분리 강도</div>
+      <div class="intensity-group" role="group">
+        <button class="intensity-btn" data-mode="single"   onclick="setIntensity('single')">핵심 3개</button>
+        <button class="intensity-btn" data-mode="moderate" onclick="setIntensity('moderate')">보통 5개</button>
+        <button class="intensity-btn" data-mode="full"     onclick="setIntensity('full')">전체 8개</button>
+      </div>
+    </section>
+
+    <!-- 4. 생성 버튼 -->
+    <section class="panel-section">
+      <button class="btn-generate" id="btnGenerate">
+        <span id="btnIcon">⚡</span>
+        <div class="spinner" id="btnSpinner"></div>
+        <span id="btnText">개체별 SVG 벡터 제작하기</span>
+      </button>
+    </section>
+
+    <!-- 5. 진행 상태 -->
+    <div class="progress-panel" id="progressPanel" aria-live="polite">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">준비 중...</div>
+      <div class="progress-steps">
+        <div class="progress-step" id="step1">
+          <div class="step-icon"></div><span>이미지 선명화</span>
+        </div>
+        <div class="progress-step" id="step2">
+          <div class="step-icon"></div><span>개체 식별 및 분석</span>
+        </div>
+        <div class="progress-step" id="step3">
+          <div class="step-icon"></div><span>SVG XML 코드 합성</span>
+        </div>
+        <div class="progress-step" id="step4">
+          <div class="step-icon"></div><span>폴더 저장</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. 기록 -->
+    <section class="panel-section">
+      <div class="section-label">최근 작업</div>
+      <div class="history-list" id="historyList">
+        <div style="font-size:0.7rem;color:var(--text-400);padding:4px 10px;">기록 없음</div>
+      </div>
+    </section>
+
+  </aside>
+
+  <!-- ══ 우측 결과 패널 ══ -->
+  <section class="result-panel" aria-label="SVG 생성 결과">
+
+    <!-- 툴바 -->
+    <div class="result-toolbar">
+      <div class="result-title">
+        생성된 벡터 개체
+        <span class="entity-count-badge" id="entityCount">0개</span>
+      </div>
+      <div class="toolbar-actions">
+        <span class="saved-path" id="savedPath"></span>
+        <button class="btn-sm" id="btnOpenFolder">📁 경로</button>
+        <button class="btn-sm" id="btnZipAll">↓ 전체</button>
+      </div>
+    </div>
+
+    <!-- 갤러리 -->
+    <div class="gallery-wrap">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🧫</div>
+        <h3>아직 생성된 벡터가 없습니다</h3>
+        <p>손그림 또는 사진을 업로드하고<br>키워드를 입력한 후 제작 버튼을 눌러주세요.</p>
+        <div class="empty-tags">
+          <span class="empty-tag">🧬 플라스미드 · DNA</span>
+          <span class="empty-tag">🔬 세포 소기관</span>
+          <span class="empty-tag">⚗️ CRISPR-Cas9</span>
+          <span class="empty-tag">🔴 단백질 · 효소</span>
+        </div>
+      </div>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+
+    <!-- XML 코드 뷰어 -->
+    <div class="code-viewer" id="codeViewer">
+      <div class="code-viewer-header">
+        <span class="code-viewer-title" id="codeViewerTitle">SVG XML</span>
+        <button class="btn-copy-code" id="btnCopyCode">복사</button>
+      </div>
+      <div class="code-content" id="codeContent"></div>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ── SVG 확대 모달 ──────────────────────────────────────── -->
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <button class="modal-close" id="modalClose" aria-label="닫기">✕</button>
+    </div>
+    <div class="modal-svg-view" id="modalSvgView"></div>
+  </div>
+</div>
+
+<!-- ── 토스트 ─────────────────────────────────────────────── -->
+<div class="toast-container" id="toastContainer" aria-live="assertive"></div>
+
+<!-- ── 스크립트 ───────────────────────────────────────────── -->
+<script src="js/vector-generator.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
